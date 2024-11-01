@@ -1,18 +1,9 @@
-import MainBackGround from "@/components/MainBackGround";
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import { fustat } from "./constants/font";
+import "./globals.css";
+import Navigation from "@/components/Navigation";
+import MainBackGround from "@/components/MainBackGround";
 
 export const metadata: Metadata = {
   title: "Agora",
@@ -34,11 +25,14 @@ export default function RootLayout({
           sizes="<generated>"
         />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${fustat.className} antialiased`}>
         <MainBackGround />
-        {children}
+        <main className="lg:flex">
+          <div className="basis-20">
+            <Navigation />
+          </div>
+          <div className="w-full">{children}</div>
+        </main>
       </body>
     </html>
   );
