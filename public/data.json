@@ -1,0 +1,30 @@
+{
+  "products": [
+    {
+      "image": "https://ng.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/80/650209/1.jpg",
+      "seller": "Amazon",
+      "title": "Blue turtle neck Tshirt",
+      "price": "$50.99",
+      "link": ""
+    },
+    {
+      "image": "https://static.thcdn.com/images/large/original//productimg/1600/1600/15083108-9755113374380820.jpg",
+      "seller": "Ebay",
+      "title": "White turtle neck Tshirt",
+      "price": "$25.99",
+      "link": ""
+    },
+    {
+      "image": "https://ng.jumia.is/unsafe/fit-in/680x680/filters:fill(white)/product/80/650209/1.jpg",
+      "seller": "Amazon",
+      "title": "Blue turtle neck Tshirt",
+      "price": "$50.99",
+      "link": ""
+    }
+  ],
+  "suggestions": [
+    "Are the any turtle neck sweater with stripe colour",
+    "Are the any turtle neck sweater with stripe colour",
+    "Are the any turtle neck sweater with stripe colour"
+  ]
+}
