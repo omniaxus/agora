@@ -5,15 +5,20 @@ import {
   shoppingBagBigSVG,
   shoppingBagSmallSVG,
 } from "@/assets/SVGs";
-import { useEffect, useLayoutEffect, useState } from "react";
+
+import {
+  Dispatch,
+  KeyboardEvent,
+  MouseEventHandler,
+  SetStateAction,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+
 import Link from "../../node_modules/next/link";
 import { gabarito } from "./constants/font";
-
-const suggestions = [
-  "Are the any turtle neck sweater with stripe colour",
-  "Are the any turtle neck sweater with stripe colour",
-  "Are the any turtle neck sweater with stripe colour",
-];
 
 const products = [
   {
@@ -22,7 +27,7 @@ const products = [
     seller: "Amazon",
     title: "Blue turtle neck Tshirt",
     price: "$50.99",
-    link: "",
+    link: "#",
   },
   {
     image:
@@ -30,7 +35,7 @@ const products = [
     seller: "Ebay",
     title: "White turtle neck Tshirt",
     price: "$25.99",
-    link: "",
+    link: "#",
   },
   {
     image:
@@ -38,97 +43,237 @@ const products = [
     seller: "Amazon",
     title: "Blue turtle neck Tshirt",
     price: "$50.99",
-    link: "",
+    link: "#",
   },
 ];
 
-export default function Home() {
-  const [innerWidth, setInnerWidth] = useState(0);
-  const [messageSession, setMessageSession] = useState(false);
-  // const [suggestions, setSuggestions] = useState<string[]>([]);
+type ChatValue = {
+  [index: string]: string | ProductListProps[];
+};
 
-  useLayoutEffect(() => {
-    setInnerWidth(window.innerWidth);
+export default function Home() {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [messageSession, setMessageSession] = useState(false);
+  const [outgoingMessage, setOutgoingMessage] = useState("");
+  const [chats, setChats] = useState<Array<ChatValue>>([]);
+  const [isReady, setIsReady] = useState(false);
+  const outGoingMessageRef = useRef<HTMLButtonElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      (async function () {
+        const response = await fetch("/.netlify/functions/suggestions");
+        const data = await response.json();
+        const extractSuggestion = JSON.parse(data.body).suggestions;
+        setSuggestions(extractSuggestion);
+      })();
+    } catch (error) {
+      console.log("error encountered");
+    }
   }, []);
 
-  // useEffect(() => {
-  //   try {
-  //     (async function () {
-  //       const response = await fetch("/netlify/functions/suggestions?q=small");
-  //       const data = await response.json();
-  //       console.log(data);
-  //     })();
-  //   } catch (error) {}
-  // });
+  useLayoutEffect(() => {
+    const session = sessionStorage.getItem("session");
+    if (session) {
+      setMessageSession(true);
+      setChats(JSON.parse(session));
+    }
+    setIsReady(true);
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chats]);
+
+  const outGoingMessageHandler = () => {
+    setChats((chats) => {
+      const updatedChats = [
+        ...chats,
+        { outgoingMessage },
+        {
+          incomingMessage:
+            "Making the application a litle more presumptious is alluring",
+        },
+        { products: products as ProductListProps[] },
+      ];
+
+      sessionStorage.setItem("session", JSON.stringify(updatedChats));
+
+      return updatedChats;
+    });
+
+    setMessageSession(true);
+    setOutgoingMessage("");
+  };
+
+  const enterKeyHandler = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      outGoingMessageRef.current?.click();
+    }
+  };
 
   return (
-    <div className="w-full flex flex-col justify-between h-[calc(100vh-100px)] lg:h-[calc(100vh-25px)]">
-      {!messageSession && (
-        <Welcome suggestions={suggestions} innerWidth={innerWidth} />
-      )}
-      {messageSession && (
-        <section className="w-11/12 max-w-3xl mx-auto mt-8 overflow-y-auto px-4 mb-10 lg:mb-16 scroll-mobile">
-          <OutGoingMessage message="I would like to get a turtle neck sweater" />
-          <IncomingMessage message="Here are some turtle neck sweater you might like!" />
-          <ProductList products={products} />
-        </section>
-      )}
-
-      {/* Messaging Start*/}
-      <section className="mx-auto w-11/12 max-w-xl ">
-        <div className="flex  lg:w-[565px] bg-white border-gray-300 rounded-full mx-auto mt-0">
-          <input
-            type="text"
-            className="w-full h-14 rounded-full outline-none pl-6"
-            placeholder="What would you like to buy today?"
+    isReady && (
+      <div className="w-full flex flex-col justify-between h-[calc(100vh-100px)] lg:h-[calc(100vh-25px)]">
+        {!messageSession && (
+          <Welcome
+            suggestions={suggestions}
+            setChats={setChats}
+            setMessageSession={setMessageSession}
           />
-          <button
-            className="flex justify-center items-center mr-2"
-            onClick={() => setMessageSession(true)}
-          >
-            {sendMessageSVG}
-          </button>
-        </div>
-        <p className="text-[#2660f2] text-center text-sm lg:text-base mt-2 ">
-          <Link href="/feedback">
-            Do you have ideas on how we can make agora better, let us know.
-          </Link>
-        </p>
-      </section>
-      {/* Messaging End*/}
-    </div>
+        )}
+        {messageSession && (
+          <section className="w-11/12 max-w-3xl mx-auto mt-8 overflow-y-auto px-4 mb-10 lg:mb-16 scroll-mobile">
+            {chats.map((chat, index) => {
+              if (chat.incomingMessage)
+                return (
+                  <IncomingMessage
+                    key={index}
+                    message={chat.incomingMessage as string}
+                  />
+                );
+              if (chat.outgoingMessage)
+                return (
+                  <OutGoingMessage
+                    key={index}
+                    message={chat.outgoingMessage as string}
+                  />
+                );
+
+              if (chat.products)
+                return (
+                  <ProductList
+                    key={index}
+                    products={chat.products as ProductListProps[]}
+                  />
+                );
+            })}
+            <div ref={chatEndRef} />
+          </section>
+        )}
+
+        {/* Messaging Start*/}
+        <section className="mx-auto w-11/12 max-w-xl ">
+          <div className="flex  lg:w-[565px] bg-white border-gray-300 rounded-full mx-auto mt-0">
+            <input
+              type="text"
+              className="w-full h-14 rounded-full outline-none pl-6"
+              placeholder="What would you like to buy today?"
+              value={outgoingMessage}
+              onChange={(e) => setOutgoingMessage(e.target.value)}
+              onKeyDown={enterKeyHandler}
+            />
+            <button
+              className="flex justify-center items-center mr-2"
+              onClick={outGoingMessageHandler}
+              ref={outGoingMessageRef}
+            >
+              {sendMessageSVG}
+            </button>
+          </div>
+          <p className="text-[#2660f2] text-center text-sm lg:text-base mt-2 ">
+            <Link href="/feedback">
+              Do you have ideas on how we can make agora better, let us know.
+            </Link>
+          </p>
+        </section>
+        {/* Messaging End*/}
+      </div>
+    )
   );
 }
 
 const Welcome = ({
   suggestions,
-  innerWidth,
+  setChats,
+  setMessageSession,
 }: {
   suggestions: string[];
-  innerWidth: number;
-}) => (
-  <div className="mt-28 lg:mt-32 mb-16 lg:mb-20">
-    <div>
-      <h2
-        className={`${gabarito.className} text-4xl lg:text-6xl font-semibold text-center`}
-      >
-        Welcome to Agora
-      </h2>
-      <p className="text-sm lg:text-lg w-4/5 max-w-96 text-center mx-auto mt-4">
-        Shopping just got better! I am here to get you the product you need.
-      </p>
-    </div>
-    <div className="flex flex-wrap w-4/5 max-w-6xl justify-center mx-auto mt-12 lg:mt-16 gap-3 lg:gap-7">
-      {suggestions.map((suggestion, index) => (
-        <Suggestion suggestion={suggestion} key={index} />
-      ))}
-    </div>
-  </div>
-);
+  setChats: Dispatch<SetStateAction<ChatValue[]>>;
+  setMessageSession: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const suggestionClickHandler = (suggestion: string) => {
+    setChats((chats) => {
+      const updatedChats = [
+        ...chats,
+        { outgoingMessage: suggestion },
+        {
+          incomingMessage:
+            "Making the application a litle more presumptious is alluring",
+        },
+        { products: products as ProductListProps[] },
+      ];
 
-const Suggestion = ({ suggestion }: { suggestion: string }) => {
+      sessionStorage.setItem("session", JSON.stringify(updatedChats));
+
+      return updatedChats;
+    });
+    setMessageSession(true);
+  };
+
   return (
-    <div className="bg-white py-4 px-5 basis-36 h-32 lg:basis-44 lg:h-40 rounded-2xl border border-gray-300 drop-shadow-sm">
+    <div className="mt-28 lg:mt-32 mb-16 lg:mb-20">
+      <div>
+        <h2
+          className={`${gabarito.className} text-4xl lg:text-6xl font-semibold text-center`}
+        >
+          Welcome to Agora
+        </h2>
+        <p className="text-sm lg:text-lg w-4/5 max-w-96 text-center mx-auto mt-4">
+          Shopping just got better! I am here to get you the product you need.
+        </p>
+      </div>
+      {/* Show suggestions load when page is loading*/}
+      {suggestions.length <= 0 ? (
+        <div className="mt-20 lg:mt-24">
+          <p className="text-center lg:text-lg">
+            Loading Suggestions... &#128173; &#128173;
+          </p>
+        </div>
+      ) : (
+        <div>
+          {/* Sugggestions Large Screen*/}
+          <div className="hidden lg:flex flex-wrap w-4/5 max-w-6xl justify-center mx-auto mt-12 lg:mt-16 gap-3 lg:gap-7">
+            {suggestions.map((suggestion, index) => (
+              <Suggestion
+                suggestion={suggestion}
+                key={index}
+                onClick={suggestionClickHandler}
+              />
+            ))}
+          </div>
+          {/* Sugggestions Small Screen*/}
+          <div className="flex flex-wrap w-4/5 max-w-6xl justify-center mx-auto mt-12 lg:mt-16 gap-3 lg:gap-7 lg:hidden">
+            {suggestions.map(
+              (suggestion, index) =>
+                index < 2 && (
+                  <Suggestion
+                    suggestion={suggestion}
+                    key={index}
+                    onClick={suggestionClickHandler}
+                  />
+                )
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Suggestion = ({
+  suggestion,
+  onClick,
+}: {
+  suggestion: string;
+  onClick: (suggestion: string) => void;
+}) => {
+  return (
+    <div
+      onClick={() => onClick(suggestion)}
+      className="cursor-pointer bg-white py-4 px-5 basis-36 h-32 lg:basis-44 lg:h-40 rounded-2xl border border-gray-300 drop-shadow-sm"
+    >
       <div className="hidden lg:block">{shoppingBagBigSVG}</div>
       <div className="lg:hidden">{shoppingBagSmallSVG}</div>
       <div className="mt-4">
@@ -155,15 +300,14 @@ const IncomingMessage = ({ message }: { message: string }) => (
 );
 
 interface ProductListProps {
-  products: {
-    image: string;
-    seller: string;
-    title: string;
-    price: string;
-    link: string;
-  }[];
+  image: string;
+  seller: string;
+  title: string;
+  price: string;
+  link: string;
 }
-const ProductList = ({ products }: ProductListProps) => {
+
+const ProductList = ({ products }: { products: Array<ProductListProps> }) => {
   return (
     <div className="w-8/12 overflow-x-scroll mt-3 pb-3 scroll-mobile">
       <div className="flex gap-5 items-start">
