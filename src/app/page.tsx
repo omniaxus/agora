@@ -57,6 +57,8 @@ export default function Home() {
   const [outgoingMessage, setOutgoingMessage] = useState("");
   const [chats, setChats] = useState<Array<ChatValue>>([]);
   const [isReady, setIsReady] = useState(false);
+  const [messageSent, setMessageSent] = useState(false);
+  const [switchCoversational, setSwitchConversational] = useState(0);
   const outGoingMessageRef = useRef<HTMLButtonElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -86,17 +88,57 @@ export default function Home() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chats]);
 
+  useEffect(() => {
+    // Network request Logic
+
+    if (messageSent && switchCoversational <= 0) {
+      setChats((chats) => {
+        const updatedChats = [
+          ...chats,
+          {
+            incomingMessage:
+              "Thats an excellent choice for this time of the year",
+          },
+          { incomingMessage: "Here are the products that..." },
+          { products: products as ProductListProps[] },
+        ];
+
+        sessionStorage.setItem("session", JSON.stringify(updatedChats));
+
+        return updatedChats;
+      });
+      setSwitchConversational((prevState) => prevState + 1);
+    }
+
+    if (messageSent && switchCoversational > 0) {
+      setChats((chats) => {
+        const updatedChats = [
+          ...chats,
+          {
+            incomingMessage:
+              "Now this will be more conversational, lets get you what you really want",
+          },
+          {
+            incomingMessage:
+              "Ask me anything that make the buying decision your best buying decision!",
+          },
+        ];
+
+        sessionStorage.setItem("session", JSON.stringify(updatedChats));
+
+        return updatedChats;
+      });
+      setSwitchConversational((prevState) => prevState + 1);
+    }
+
+    if (switchCoversational > 2) setSwitchConversational(0);
+
+    setMessageSent(false);
+  }, [messageSent]);
+
   const outGoingMessageHandler = () => {
     setChats((chats) => {
-      const updatedChats = [
-        ...chats,
-        { outgoingMessage },
-        {
-          incomingMessage:
-            "Making the application a litle more presumptious is alluring",
-        },
-        { products: products as ProductListProps[] },
-      ];
+      const updatedChats = [...chats, { outgoingMessage }];
 
       sessionStorage.setItem("session", JSON.stringify(updatedChats));
 
@@ -105,6 +147,7 @@ export default function Home() {
 
     setMessageSession(true);
     setOutgoingMessage("");
+    setMessageSent(true);
   };
 
   const enterKeyHandler = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -121,6 +164,7 @@ export default function Home() {
             suggestions={suggestions}
             setChats={setChats}
             setMessageSession={setMessageSession}
+            setMessageSent={setMessageSent}
           />
         )}
         {messageSession && (
@@ -188,28 +232,23 @@ const Welcome = ({
   suggestions,
   setChats,
   setMessageSession,
+  setMessageSent,
 }: {
   suggestions: string[];
   setChats: Dispatch<SetStateAction<ChatValue[]>>;
   setMessageSession: Dispatch<SetStateAction<boolean>>;
+  setMessageSent: Dispatch<SetStateAction<boolean>>;
 }) => {
   const suggestionClickHandler = (suggestion: string) => {
     setChats((chats) => {
-      const updatedChats = [
-        ...chats,
-        { outgoingMessage: suggestion },
-        {
-          incomingMessage:
-            "Making the application a litle more presumptious is alluring",
-        },
-        { products: products as ProductListProps[] },
-      ];
+      const updatedChats = [...chats, { outgoingMessage: suggestion }];
 
       sessionStorage.setItem("session", JSON.stringify(updatedChats));
 
       return updatedChats;
     });
     setMessageSession(true);
+    setMessageSent(true);
   };
 
   return (
@@ -336,7 +375,7 @@ const ProductItem = ({
     <div className="relative h-28 rounded-3xl border border-gray-300 p-2">
       <img alt="product" src={image} className="w-full h-full object-cover" />
     </div>
-    <p className="text-[10px] lg:text-xs bg-gray-50 border border-gray-400 w-fit px-3 py-1 rounded-full my-2">
+    <p className="text-[10px] lg:text-xs bg-gray-50 border border-gray-400 w-fit px-2 py-0.5 rounded-full my-2">
       Seller: <span className="font-bold">{seller}</span>
     </p>
     <h3>{title}</h3>
@@ -344,7 +383,7 @@ const ProductItem = ({
     <Link
       href={link}
       target="_blank"
-      className="block bg-[#434242] text-white py-1 mt-4 text-center rounded-md"
+      className="block bg-[#434242] text-white py-0.5 mt-4 text-center rounded-md text-sm"
     >
       BUY
     </Link>
