@@ -58,6 +58,7 @@ export default function Home() {
   const [isReady, setIsReady] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
   const [switchCoversational, setSwitchConversational] = useState(0);
+  const [showAITyping, setShowAITyping] = useState(false);
   const outGoingMessageRef = useRef<HTMLButtonElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -91,43 +92,52 @@ export default function Home() {
     // Network request Logic
 
     if (messageSent && switchCoversational <= 0) {
-      setChats((chats) => {
-        const updatedChats = [
-          ...chats,
-          {
-            incomingMessage:
-              "Thats an excellent choice for this time of the year",
-          },
-          { incomingMessage: "Here are the products that..." },
-          { products: products as ProductListProps[] },
-        ];
+      setShowAITyping(true);
+      setTimeout(() => {
+        setChats((chats) => {
+          const updatedChats = [
+            ...chats,
+            {
+              incomingMessage:
+                "Thats an excellent choice for this time of the year",
+            },
+            { incomingMessage: "Here are the products that..." },
+            { products: products as ProductListProps[] },
+          ];
 
-        sessionStorage.setItem("session", JSON.stringify(updatedChats));
+          sessionStorage.setItem("session", JSON.stringify(updatedChats));
 
-        return updatedChats;
-      });
-      setSwitchConversational((prevState) => prevState + 1);
+          return updatedChats;
+        });
+
+        setSwitchConversational((prevState) => prevState + 1);
+        setShowAITyping(false);
+      }, 3000);
     }
 
     if (messageSent && switchCoversational > 0) {
-      setChats((chats) => {
-        const updatedChats = [
-          ...chats,
-          {
-            incomingMessage:
-              "Now this will be more conversational, lets get you what you really want",
-          },
-          {
-            incomingMessage:
-              "Ask me anything that make the buying decision your best buying decision!",
-          },
-        ];
+      setShowAITyping(true);
+      setTimeout(() => {
+        setChats((chats) => {
+          const updatedChats = [
+            ...chats,
+            {
+              incomingMessage:
+                "Now this will be more conversational, lets get you what you really want",
+            },
+            {
+              incomingMessage:
+                "Ask me anything that make the buying decision your best buying decision!",
+            },
+          ];
 
-        sessionStorage.setItem("session", JSON.stringify(updatedChats));
+          sessionStorage.setItem("session", JSON.stringify(updatedChats));
 
-        return updatedChats;
-      });
-      setSwitchConversational((prevState) => prevState + 1);
+          return updatedChats;
+        });
+        setSwitchConversational((prevState) => prevState + 1);
+        setShowAITyping(false);
+      }, 3000);
     }
 
     if (switchCoversational > 2) setSwitchConversational(0);
@@ -176,6 +186,8 @@ export default function Home() {
                     message={chat.incomingMessage as string}
                   />
                 );
+
+              // Incoming Meesages and Products
               if (chat.outgoingMessage)
                 return (
                   <OutGoingMessage
@@ -192,11 +204,13 @@ export default function Home() {
                   />
                 );
             })}
+            {showAITyping && <TypingIndicator />}
+            <div className="opacity-0 mb-10">{String(showAITyping)}</div>
             <div ref={chatEndRef} />
           </section>
         )}
 
-        {/* Messaging Start*/}
+        {/* Messaging Input Start*/}
         <section className="mx-auto w-11/12 max-w-xl ">
           <div className="flex  lg:w-[565px] bg-white border-gray-300 rounded-full mx-auto mt-0">
             <input
@@ -221,7 +235,7 @@ export default function Home() {
             </Link>
           </p>
         </section>
-        {/* Messaging End*/}
+        {/* Messaging Output End*/}
       </div>
     )
   );
@@ -336,6 +350,25 @@ const IncomingMessage = ({ message }: { message: string }) => (
     </p>
   </div>
 );
+
+const TypingIndicator = () => {
+  return (
+    <div className="flex mt-3 bg-white border border-gray-300 w-fit max-w-60 lg:max-w-96 py-4 px-5 rounded-tl-2xl rounded-tr-2xl rounded-bl-sm rounded-br-2xl text-sm lg:text-base">
+      <span
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        style={{ animationDelay: "0s" }}
+      ></span>
+      <span
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        style={{ animationDelay: "0.2s" }}
+      ></span>
+      <span
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        style={{ animationDelay: "0.4s" }}
+      ></span>
+    </div>
+  );
+};
 
 interface ProductListProps {
   image: string;
