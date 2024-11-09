@@ -310,7 +310,7 @@ const Suggestion = ({
   return (
     <div
       onClick={() => onClick(suggestion)}
-      className="cursor-pointer bg-white py-4 px-5 basis-36 h-32 lg:basis-44 lg:h-40 rounded-2xl border border-gray-300 drop-shadow-sm"
+      className="cursor-pointer bg-white py-3 px-3 lg:py-4 lg:px-5 basis-32 h-32 lg:basis-44 lg:h-40 rounded-2xl border border-gray-300 drop-shadow-sm"
     >
       <div className="hidden lg:block">{shoppingBagBigSVG}</div>
       <div className="lg:hidden">{shoppingBagSmallSVG}</div>
@@ -347,7 +347,7 @@ interface ProductListProps {
 
 const ProductList = ({ products }: { products: Array<ProductListProps> }) => {
   return (
-    <div className="w-8/12 overflow-x-scroll mt-3 pb-3 scroll-mobile">
+    <div className="w-10/12 lg:w-8/12 overflow-x-scroll mt-3 pb-3 scroll-mobile">
       <div className="flex gap-5 items-start">
         {products.map((product, index) => (
           <ProductItem {...product} key={index} />
@@ -370,7 +370,7 @@ const ProductItem = ({
   price: string;
   link: string;
 }) => (
-  <div className="basis-48 shrink-0 bg-white p-3 rounded-xl border border-gray-300 drop-shadow-sm">
+  <div className="basis-44 shrink-0 bg-white p-3 rounded-xl border border-gray-300 drop-shadow-sm">
     <div className="relative h-28 rounded-3xl border border-gray-300 p-2">
       <img alt="product" src={image} className="w-full h-full object-cover" />
     </div>
