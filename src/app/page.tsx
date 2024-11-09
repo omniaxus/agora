@@ -9,7 +9,6 @@ import {
 import {
   Dispatch,
   KeyboardEvent,
-  MouseEventHandler,
   SetStateAction,
   useEffect,
   useLayoutEffect,
@@ -71,7 +70,7 @@ export default function Home() {
         setSuggestions(extractSuggestion);
       })();
     } catch (error) {
-      console.log("error encountered");
+      console.log(error);
     }
   }, []);
 
@@ -134,7 +133,7 @@ export default function Home() {
     if (switchCoversational > 2) setSwitchConversational(0);
 
     setMessageSent(false);
-  }, [messageSent]);
+  }, [messageSent, switchCoversational]);
 
   const outGoingMessageHandler = () => {
     setChats((chats) => {
